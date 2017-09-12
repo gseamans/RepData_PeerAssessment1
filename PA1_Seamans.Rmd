@@ -1,0 +1,36 @@
+---
+itle: "Reproducible Research: Peer Assessment 1"
+author: "Gary R Seamans"
+date: "September 12, 2017"
+output: html_document
+keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Loading and preprocessing the data
+The data used for this project can be downloaded from 
+[Activity Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)
+
+The data contains a header row. There are three columns: *steps*, *date*, *interval*.
+
+1. **steps**: Number of steps taken in a 5-minute interval. Missing values are encoded as
+NA.
+2. **date**: The date on which the measurement was taken in YYYY-MM-DD format
+3. **interval**: Identifier for the 5-minute interval in which measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
+```
+activities <- read.csv(file = "data/activity.csv")
+```
+
+## What is mean total number of steps taken per day?
+
+
+
+## What is the average daily activity pattern?
+
+
+
+## Imputing missing values
