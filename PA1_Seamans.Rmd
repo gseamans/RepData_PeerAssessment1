@@ -191,6 +191,18 @@ dev.off()
 
 ![](histogram_1.png)
 
+### Calculate the mean and median of the steps per day
+
+```
+spdmedian <- median(stepsPerDay$Steps)
+spdmean <- mean(stepsPerDay$Steps)
+spdmedian
+spdmean
+```
+**Steps Per Day Median**: 10765
+
+**Steps Per day Mean**: 10766.19
+
 ## What is the average daily activity pattern?
 
 
