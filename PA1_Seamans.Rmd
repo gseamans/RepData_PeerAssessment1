@@ -33,6 +33,9 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 3. **magrittr** for pipe operators
 4. **knitr** for table generation with kable()
 5. **ggplot2** for plotting
+6. **mice** for imputing missing values
+7. **grid** for nicely arrranging ggplots
+8. **gridExtra** for nicely arranging ggplots
 
 ```
 library(dplyr)
@@ -40,6 +43,9 @@ library(lubridate)
 library(magrittr)
 library(knitr)
 library(ggplot2)
+library(mice)
+library(grid)
+library(gridExtra)
 ```
 
 ### Read in the data and take a look at the data.
@@ -79,13 +85,6 @@ Printing the classes shows that dates are currtently factors. These will be chan
 activities %<>% mutate(date=ymd(date))
 ```
 
-### Next I'll add the day of the week, using the abbreviations, as a new column
-```
-activities$weekday <- as.factor(weekdays(activities$date, abbreviate = TRUE))
-```
-
-
-
 
 ## What is the mean total number of steps taken per day?
 
@@ -97,10 +96,11 @@ For this part of the assignment, you can ignore the missing values in the datase
 
 As the first step I'll remove the rows where steps = NA. Then I'll calculate the steps per day, the historgram
 and the mean/median of the total number of steps taken per day. I thought that it might be interesting to calculate
-the total steps per weekday so I calculated that as well.
+the total steps per weekday so I calculated that as well and added the weekdays to the dataset.
 
 ```
 activitiesNoNAs <- activities[complete.cases(activities),]
+activitiesNoNAs$weekday <- as.factor(weekdays(activitiesNoNAs$date, abbreviate = TRUE))
 stepsPerWeekDay <- aggregate(activitiesNoNAs$steps, by = list(activitiesNoNAs$weekday), sum)
 stepsPerDay <- aggregate(activitiesNoNAs$steps, by = list(activitiesNoNAs$date), sum)
 names(stepsPerWeekDay) <- c("Weekday", "Steps")
@@ -184,7 +184,7 @@ are on Thursday and the most are on Wednesday.
 ```
 png(filename = "histogram_1.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
 qplot(stepsPerDay$Steps, binwidth = 1000, geom = "histogram", xlab = "Total Steps", 
-    ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Histogram of Steps per Day") +
+    ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Steps per Day") +
     theme(plot.title = element_text(hjust = 0.5))
 dev.off()
 ```
@@ -219,3 +219,78 @@ dev.off()
 
 
 ## Imputing missing values
+
+### Calculate the total number of missing values (Steps that are NA)
+
+```
+missingvalues <- length(which(is.na(activities$steps)))
+missingvalues
+```
+
+**Missing Values**: 2304
+
+### Devise a strategy for filling in the all of the missing values in the dataset
+
+I'll use the **mice** package to impute the missing values for **steps**. First I'll take
+another look at the missing values.
+
+```
+kable(md.pattern(activities),align = "l", row.names = FALSE)
+```
+
+The table verifies that the only missing values are the 2304 **steps**.
+
+|date |interval |weekday |steps |     |
+|:----|:--------|:-------|:-----|:----|
+|1    |1        |1       |1     |0    |
+|1    |1        |1       |0     |1    |
+|0    |0        |0       |2304  |2304 |
+
+The **pmm** (Predicitive Mean Matching) method provided by the **mice** package should 
+do a reasonable good job of imputing the missing values. It will take a while but should
+provide better approximations.
+
+### Impute the missing values and extract a filled in dataset
+
+```
+activitiesMids <- mice(data = activities, method = "pmm", maxit = 25, seed = 500)
+activitiesComplete <- complete(activitiesMids)
+kable(md.pattern(activitiesComplete),align = "l", row.names = FALSE)
+```
+The following table shows that there are no longer any missing values.
+
+|steps |date |interval |   |
+|:-----|:----|:--------|:--|
+|1     |1    |1        |0  |
+|0     |0    |0        |0  |
+
+### Create a histogram of the complete set and report the median and mean
+
+```
+stepsPerDay2 <- aggregate(activitiesComplete$steps, by = list(activitiesComplete$date), sum)
+names(stepsPerDay2) <- c("Day", "Steps")
+png(filename = "histogram_2.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
+
+pcomplete <- qplot(stepsPerDay2$Steps, binwidth = 1000, geom = "histogram", xlab = "Total Steps", 
+    ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Steps per Day (Complete)") +
+    theme(plot.title = element_text(hjust = 0.5))
+    
+pincomplete <- qplot(stepsPerDay$Steps, binwidth = 1000, geom = "histogram", xlab = "Total Steps", 
+    ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Steps per Day") +
+    theme(plot.title = element_text(hjust = 0.5))
+grid.arrange(pcomplete,pincomplete, ncol = 2)
+dev.off()
+spdmedian2 <- median(stepsPerDay2$Steps)
+spdmean2 <- mean(stepsPerDay2$Steps)
+spdmedian2
+spdmean2
+
+```
+![](histogram_2.png)
+
+**Steps Per Day Median**: 10600
+
+**Steps Per day Mean**: 10761.16
+
+Both the median and mean changed slightly after imputing the missing values. The distribution looks
+very similar with some changes caused by imputing the missing values.
