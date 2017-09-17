@@ -7,9 +7,10 @@ output:
   html_document:
     theme: united
     highlight: tango
-  pdf_document: default
+    fig_caption: true
+  pdf_document:
+    fig_caption: true
 ---
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -95,7 +96,8 @@ For this part of the assignment, you can ignore the missing values in the datase
 3. Calculate and report the mean and median of the total number of steps taken per day
 
 As the first step I'll remove the rows where steps = NA. Then I'll calculate the steps per day, the historgram
-and the mean/median of the total number of steps taken per day. I'll also calculate the total and average steps per day of the week.
+and the mean/median of the total number of steps taken per day. I thought that it might be interesting to calculate
+the total steps per weekday so I calculated that as well.
 
 ```
 activitiesNoNAs <- activities[complete.cases(activities),]
@@ -164,7 +166,8 @@ Total steps per day omitting values where steps is NA:
 |2012-11-28 |10183 |
 |2012-11-29 |7047  |
 
-In the following table, steps per weekday omitting values wereh steps is NA, we can see that the least steps per day are on Thursday and the most are on Wednesday.
+In the following table, steps per weekday omitting values where is NA, we can see that the least steps per day 
+are on Thursday and the most are on Wednesday.
 
 |Weekday |Steps |
 |:-------|:-----|
@@ -175,6 +178,18 @@ In the following table, steps per weekday omitting values wereh steps is NA, we 
 |Fri     |86518 |
 |Sat     |87748 |
 |Wed     |94326 |
+
+### Histogram of the steps per day with binwidth = 1000
+
+```
+png(filename = "histogram_1.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
+qplot(stepsPerDay$Steps, binwidth = 1000, geom = "histogram", xlab = "Total Steps", 
+    ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Histogram of Steps per Day") +
+    theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+```
+
+![](histogram_1.png)
 
 ## What is the average daily activity pattern?
 
