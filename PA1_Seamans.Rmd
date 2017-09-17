@@ -1,7 +1,7 @@
 ---
 author: "Gary R Seamans"
 date: "September 12, 2017"
-itle: 'Reproducible Research: Peer Assessment 1'
+title: 'Reproducible Research: Peer Assessment 1'
 keep_md: yes
 output:
   html_document:
@@ -205,6 +205,17 @@ spdmean
 
 ## What is the average daily activity pattern?
 
+```
+byInterval <- aggregate(x=list(mean_steps = activitiesNoNAs$steps), 
+    by = list(interval=activitiesNoNAs$interval), mean)
+
+png(filename = "activity_pattern.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
+ggplot(byInterval, aes(x=interval, y=mean_steps)) + geom_line(color = "blue") + 
+    xlab("5 Minute Intervals") + ylab("Average Steps") + 
+    ggtitle("Daily Activity Pattern") + theme(plot.title = element_text(hjust = 0.5))
+dev.off()
+```
+![](activity_pattern.png)
 
 
 ## Imputing missing values
