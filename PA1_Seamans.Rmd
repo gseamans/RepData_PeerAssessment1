@@ -292,17 +292,17 @@ Both the median and mean changed slightly after imputing the missing values. The
 very similar with some changes caused by imputing the missing values.
 
 ```{r}
-x <- as.factor(weekdays(activitiesComplete$date, abbreviate = TRUE))
+activitiesComplete$daytype <- as.factor(weekdays(activitiesComplete$date, abbreviate = TRUE))
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-### Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
 ```{r}
     activitiesComplete$daytype <- as.factor(ifelse(weekdays(activitiesComplete$date, abbreviate = TRUE) 
                                                    %in% c("Sat","Sun"), "weekend","weekday"))
 ```
 
-### Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
-### 
+Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
