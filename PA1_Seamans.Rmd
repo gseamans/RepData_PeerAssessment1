@@ -291,18 +291,26 @@ spdmean2
 Both the median and mean changed slightly after imputing the missing values. The distribution looks
 very similar with some changes caused by imputing the missing values.
 
-```{r}
-activitiesComplete$daytype <- as.factor(weekdays(activitiesComplete$date, abbreviate = TRUE))
-```
-
 ## Are there differences in activity patterns between weekdays and weekends?
 
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
 ```{r}
-    activitiesComplete$daytype <- as.factor(ifelse(weekdays(activitiesComplete$date, abbreviate = TRUE) 
-                                                   %in% c("Sat","Sun"), "weekend","weekday"))
+activitiesComplete %<>% mutate(date=ymd(date))
+activitiesComplete$daytype <- as.factor(ifelse(weekdays(activitiesComplete$date, abbreviate = TRUE)  
+                                               %in% c("Sat","Sun"), "Weekend","Weekday"))
 ```
 
 Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+
+```{r}
+    wwIntervals <- aggregate(x=list(mean_steps = activitiesComplete$steps), 
+                             by = list(interval=activitiesComplete$interval, weekday=activitiesComplete$daytype), mean)
+    png(filename = "weekendVSweekday.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
+    ggplot(wwIntervals, aes(x=interval, y=mean_steps)) + geom_line(color = "blue") + 
+        xlab("5 Minute Intervals") + ylab("Average Steps") + ggtitle("Daily Activity Pattern") + 
+        theme(plot.title = element_text(hjust = 0.5)) + facet_grid(weekday ~ .)
+    dev.off()
+```
+![](weekendVSweekday.png)
 
