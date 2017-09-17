@@ -11,9 +11,6 @@ output:
   pdf_document:
     fig_caption: true
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 ## Loading and preprocessing the data
 The data used for this project can be downloaded from 
 [Activity Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)
@@ -36,8 +33,11 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 6. **mice** for imputing missing values
 7. **grid** for nicely arrranging ggplots
 8. **gridExtra** for nicely arranging ggplots
+9. **strtable.R** for creating tables from str(). Thanks to **jbreyer**
+[strtable.R](https://gist.github.com/jbryer/4a0a5ab9fe7e1cf3be0e)
 
-```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(lubridate)
 library(magrittr)
@@ -46,13 +46,15 @@ library(ggplot2)
 library(mice)
 library(grid)
 library(gridExtra)
+source("strtable.R")
 ```
 
 ### Read in the data and take a look at the data.
 
-```
+```{r}
 activities <- read.csv(file = "activity.csv")
 kable(activities %>% sample_n(10), align = "l", row.names = FALSE)
+source("strtable.R")
 kable(strtable(activities))
 ```
 
@@ -79,13 +81,6 @@ Printing the classes shows that dates are currtently factors. These will be chan
 |date     |Factor w/ 61 levels |"2012-10-01", "2012-10-02", ... |"2012-10-01", ...   |
 |interval |integer             |NA                              |0, 5, 10, 15, ...   |
 
-### Convert the dates from factors to dates
-
-```
-activities %<>% mutate(date=ymd(date))
-```
-
-
 ## What is the mean total number of steps taken per day?
 
 For this part of the assignment, you can ignore the missing values in the dataset.
@@ -98,8 +93,9 @@ As the first step I'll remove the rows where steps = NA. Then I'll calculate the
 and the mean/median of the total number of steps taken per day. I thought that it might be interesting to calculate
 the total steps per weekday so I calculated that as well and added the weekdays to the dataset.
 
-```
+```{r}
 activitiesNoNAs <- activities[complete.cases(activities),]
+activitiesNoNAs %<>% mutate(date=ymd(date))
 activitiesNoNAs$weekday <- as.factor(weekdays(activitiesNoNAs$date, abbreviate = TRUE))
 stepsPerWeekDay <- aggregate(activitiesNoNAs$steps, by = list(activitiesNoNAs$weekday), sum)
 stepsPerDay <- aggregate(activitiesNoNAs$steps, by = list(activitiesNoNAs$date), sum)
@@ -181,7 +177,7 @@ are on Thursday and the most are on Wednesday.
 
 ### Histogram of the steps per day with binwidth = 1000
 
-```
+```{r}
 png(filename = "histogram_1.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
 qplot(stepsPerDay$Steps, binwidth = 1000, geom = "histogram", xlab = "Total Steps", 
     ylab = "Frequency", fill=I("lightblue"), col=I("black"), main ="Steps per Day") +
@@ -193,7 +189,7 @@ dev.off()
 
 ### Calculate the mean and median of the steps per day
 
-```
+```{r}
 spdmedian <- median(stepsPerDay$Steps)
 spdmean <- mean(stepsPerDay$Steps)
 spdmedian
@@ -205,7 +201,7 @@ spdmean
 
 ## What is the average daily activity pattern?
 
-```
+```{r}
 byInterval <- aggregate(x=list(mean_steps = activitiesNoNAs$steps), 
     by = list(interval=activitiesNoNAs$interval), mean)
 
@@ -222,7 +218,7 @@ dev.off()
 
 ### Calculate the total number of missing values (Steps that are NA)
 
-```
+```{r}
 missingvalues <- length(which(is.na(activities$steps)))
 missingvalues
 ```
@@ -234,7 +230,7 @@ missingvalues
 I'll use the **mice** package to impute the missing values for **steps**. First I'll take
 another look at the missing values.
 
-```
+```{r}
 kable(md.pattern(activities),align = "l", row.names = FALSE)
 ```
 
@@ -252,7 +248,7 @@ provide better approximations.
 
 ### Impute the missing values and extract a filled in dataset
 
-```
+```{r}
 activitiesMids <- mice(data = activities, method = "pmm", maxit = 25, seed = 500)
 activitiesComplete <- complete(activitiesMids)
 kable(md.pattern(activitiesComplete),align = "l", row.names = FALSE)
@@ -266,7 +262,7 @@ The following table shows that there are no longer any missing values.
 
 ### Create a histogram of the complete set and report the median and mean
 
-```
+```{r}
 stepsPerDay2 <- aggregate(activitiesComplete$steps, by = list(activitiesComplete$date), sum)
 names(stepsPerDay2) <- c("Day", "Steps")
 png(filename = "histogram_2.png", width = 480, height = 480, units = "px", pointsize = 12, bg="white")
@@ -294,3 +290,19 @@ spdmean2
 
 Both the median and mean changed slightly after imputing the missing values. The distribution looks
 very similar with some changes caused by imputing the missing values.
+
+```{r}
+x <- as.factor(weekdays(activitiesComplete$date, abbreviate = TRUE))
+```
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+### Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+```{r}
+    activitiesComplete$daytype <- as.factor(ifelse(weekdays(activitiesComplete$date, abbreviate = TRUE) 
+                                                   %in% c("Sat","Sun"), "weekend","weekday"))
+```
+
+### Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+### 
